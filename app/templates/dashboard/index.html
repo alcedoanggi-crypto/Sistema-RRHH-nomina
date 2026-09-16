@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · RRHH y Nómina{% endblock %}
+{% block page_title %}Tablero Ejecutivo{% endblock %}
+{% block page_sub %}<p class="page-sub" id="pageSub">Resumen de la organización</p>{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card kpi-verde">
+      <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+      <div class="kpi-label">Nómina del mes</div>
+      <div class="kpi-value">{{ kpis.nomina_total | money }}</div>
+      <div class="kpi-foot">Neto pagado en el período actual</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card kpi-azul">
+      <div class="kpi-icon"><i class="bi bi-people"></i></div>
+      <div class="kpi-label">Empleados activos</div>
+      <div class="kpi-value">{{ kpis.empleados_activos }}</div>
+      <div class="kpi-foot">En planilla actualmente</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card kpi-mix">
+      <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+      <div class="kpi-label">Solicitudes pendientes</div>
+      <div class="kpi-value">{{ kpis.solicitudes_pendientes }}</div>
+      <div class="kpi-foot">Permisos por aprobar</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card kpi-gris">
+      <div class="kpi-icon"><i class="bi bi-person-x"></i></div>
+      <div class="kpi-label">Ausencias del mes</div>
+      <div class="kpi-value">{{ kpis.ausencias_mes }}</div>
+      <div class="kpi-foot">Días marcados como ausente</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-bar-chart-line me-1"></i> Gasto en nómina mensual · últimos 12 meses</div>
+      <div class="card-body"><canvas id="chartNomina" height="120"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-pie-chart me-1"></i> Empleados por departamento</div>
+      <div class="card-body"><canvas id="chartDeptos" height="150"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-arrow-left-right me-1"></i> Rotación de personal · ingresos vs. salidas</div>
+      <div class="card-body"><canvas id="chartRotacion" height="140"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-clipboard-x me-1"></i> Ausentismo por departamento</div>
+      <div class="card-body"><canvas id="chartAusentismo" height="140"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-gift"></i> Cumpleaños del mes</div>
+      <div class="card-body">
+        {% for e in cumpleanieros %}
+        <div class="people-row">
+          {% include "empleados/_avatar.html" %}
+          <div>
+            <div class="name">{{ e.nombre_completo }}</div>
+            <div class="meta">{{ e.fecha_nacimiento.strftime('%d de %B') }}</div>
+          </div>
+        </div>
+        {% else %}<p class="text-muted mb-0 small">Sin cumpleaños este mes.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-award"></i> Aniversarios laborales</div>
+      <div class="card-body">
+        {% for e in aniversarios %}
+        <div class="people-row">
+          {% include "empleados/_avatar.html" %}
+          <div>
+            <div class="name">{{ e.nombre_completo }}</div>
+            <div class="meta">{{ e.antiguedad_anios }} años en la empresa</div>
+          </div>
+        </div>
+        {% else %}<p class="text-muted mb-0 small">Sin aniversarios este mes.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-calendar-check"></i> Solicitudes recientes</div>
+      <div class="card-body">
+        {% for p in permisos_recientes %}
+        <div class="people-row justify-content-between">
+          <div>
+            <div class="name">{{ p.empleado.nombre_completo }}</div>
+            <div class="meta">{{ p.tipo.label }} · {{ p.dias }} día(s)</div>
+          </div>
+          <span class="badge bg-{{ p.estado.badge }} badge-estado">{{ p.estado.label }}</span>
+        </div>
+        {% else %}<p class="text-muted mb-0 small">Sin solicitudes.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Saludo dinámico según la hora
+(function () {
+  const h = new Date().getHours();
+  const saludo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const fecha = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const el = document.getElementById('pageSub');
+  if (el) el.textContent = `${saludo}, {{ current_user.username }} · ${fecha.charAt(0).toUpperCase() + fecha.slice(1)}`;
+})();
+
+const AZUL = '#1E3A5F', VERDE = '#10B981', GRIS = '#94a3b8';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.color = '#64748b';
+
+function gradient(ctx, c1, c2) {
+  const g = ctx.createLinearGradient(0, 0, 0, 300);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+fetch("{{ url_for('dashboard.chart_nomina_mensual') }}").then(r => r.json()).then(d => {
+  const ctx = document.getElementById('chartNomina').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels: d.labels, datasets: [{
+      label: 'Neto pagado', data: d.data,
+      backgroundColor: gradient(ctx, VERDE, AZUL), borderRadius: 6, maxBarThickness: 34,
+    }]},
+    options: { plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => '$' + v.toLocaleString() }, grid: { color: '#eef2f7' } }, x: { grid: { display: false } } } }
+  });
+});
+
+fetch("{{ url_for('dashboard.chart_empleados_departamento') }}").then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartDeptos'), {
+    type: 'doughnut',
+    data: { labels: d.labels, datasets: [{ data: d.data, borderWidth: 0,
+      backgroundColor: [AZUL, VERDE, '#4a6b91', '#34d399', GRIS, '#0e9f6e', '#17304d'] }]},
+    options: { cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } } } }
+  });
+});
+
+fetch("{{ url_for('dashboard.chart_rotacion') }}").then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartRotacion'), {
+    type: 'line',
+    data: { labels: d.labels, datasets: [
+      { label: 'Ingresos', data: d.ingresos, borderColor: VERDE, backgroundColor: 'rgba(16,185,129,.1)', tension: .35, fill: true, pointRadius: 3 },
+      { label: 'Salidas', data: d.salidas, borderColor: AZUL, backgroundColor: 'rgba(30,58,95,.1)', tension: .35, fill: true, pointRadius: 3 },
+    ]},
+    options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } } },
+      scales: { y: { grid: { color: '#eef2f7' } }, x: { grid: { display: false } } } }
+  });
+});
+
+fetch("{{ url_for('dashboard.chart_ausentismo') }}").then(r => r.json()).then(d => {
+  const ctx = document.getElementById('chartAusentismo').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels: d.labels, datasets: [{
+      label: 'Ausencias / tardanzas', data: d.data,
+      backgroundColor: gradient(ctx, AZUL, VERDE), borderRadius: 6, maxBarThickness: 22 }]},
+    options: { indexAxis: 'y', plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#eef2f7' } }, y: { grid: { display: false } } } }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Nueva evaluación{% endblock %}
+{% block page_title %}Nueva evaluación de desempeño{% endblock %}
+
+{% block content %}
+<div class="card"><div class="card-body">
+<form method="post" class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Empleado *</label>
+    <select name="empleado_id" class="form-select" required>
+      {% for e in empleados %}<option value="{{ e.id }}">{{ e.nombre_completo }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Período *</label>
+    <input name="periodo" class="form-control" placeholder="Ej. 2026-S1" required>
+  </div>
+
+  {% set etiquetas = {'productividad':'Productividad','calidad_trabajo':'Calidad del trabajo','trabajo_equipo':'Trabajo en equipo','puntualidad':'Puntualidad','iniciativa':'Iniciativa'} %}
+  {% for c in criterios %}
+  <div class="col-md-6">
+    <label class="form-label">{{ etiquetas[c] }}: <span id="v_{{ c }}">3</span>/5</label>
+    <input type="range" min="1" max="5" value="3" name="{{ c }}" class="form-range"
+           oninput="document.getElementById('v_{{ c }}').textContent = this.value">
+  </div>
+  {% endfor %}
+
+  <div class="col-md-6">
+    <label class="form-label">Fortalezas</label>
+    <textarea name="fortalezas" class="form-control" rows="3"></textarea>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Áreas de mejora</label>
+    <textarea name="areas_mejora" class="form-control" rows="3"></textarea>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-success"><i class="bi bi-check-lg"></i> Guardar evaluación</button>
+    <a href="{{ url_for('evaluacion.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+</div></div>
+{% endblock %}

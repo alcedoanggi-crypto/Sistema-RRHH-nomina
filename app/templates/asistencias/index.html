@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Control de asistencia{% endblock %}
+{% block page_title %}Control de Asistencia{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body text-center">
+      <h6 class="text-muted">Hoy · {{ hoy.strftime('%A %d/%m/%Y') }}</h6>
+      {% if mi_asistencia %}
+        <p class="mb-1">Entrada: <strong>{{ mi_asistencia.hora_entrada.strftime('%H:%M') if mi_asistencia.hora_entrada else '--' }}</strong></p>
+        <p>Salida: <strong>{{ mi_asistencia.hora_salida.strftime('%H:%M') if mi_asistencia.hora_salida else '--' }}</strong></p>
+      {% endif %}
+      {% if current_user.empleado_id %}
+      <form method="post" action="{{ url_for('asistencia.marcar') }}">
+        <button class="btn btn-success btn-lg w-100">
+          <i class="bi bi-fingerprint"></i>
+          {% if not mi_asistencia %}Marcar entrada
+          {% elif not mi_asistencia.hora_salida %}Marcar salida
+          {% else %}Jornada completa{% endif %}
+        </button>
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="row g-3 h-100">
+      <div class="col-4"><div class="kpi-card kpi-verde h-100"><div class="kpi-label">Presentes</div><div class="kpi-value">{{ resumen.presente }}</div></div></div>
+      <div class="col-4"><div class="kpi-card kpi-mix h-100"><div class="kpi-label">Tardanzas</div><div class="kpi-value">{{ resumen.tardanza }}</div></div></div>
+      <div class="col-4"><div class="kpi-card kpi-gris h-100"><div class="kpi-label">Ausencias</div><div class="kpi-value">{{ resumen.ausente }}</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card"><div class="card-body">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2" method="get">
+      <input type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm" style="width:100px">
+      <select name="mes" class="form-select form-select-sm">
+        {% for m in range(1,13) %}<option value="{{ m }}" {{ 'selected' if m == mes }}>{{ m }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-sm btn-primary">Filtrar</button>
+    </form>
+    {% if not current_user.es_empleado %}
+    <a href="{{ url_for('asistencia.reporte', anio=anio, mes=mes) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-bar-graph"></i> Reporte mensual</a>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover table-sm align-middle">
+      <thead><tr><th>Fecha</th>{% if not current_user.es_empleado %}<th>Empleado</th>{% endif %}<th>Entrada</th><th>Salida</th><th>Horas</th><th>Estado</th><th>Obs.</th></tr></thead>
+      <tbody>
+      {% for r in registros %}
+        <tr>
+          <td>{{ r.fecha.strftime('%d/%m/%Y') }}</td>
+          {% if not current_user.es_empleado %}<td>{{ r.empleado.nombre_completo }}</td>{% endif %}
+          <td>{{ r.hora_entrada.strftime('%H:%M') if r.hora_entrada else '--' }}</td>
+          <td>{{ r.hora_salida.strftime('%H:%M') if r.hora_salida else '--' }}</td>
+          <td>{{ r.horas_trabajadas }}</td>
+          <td><span class="badge bg-{{ {'presente':'success','tardanza':'warning','ausente':'secondary','permiso':'info'}.get(r.estado,'light') }}">{{ r.estado }}</span></td>
+          <td class="small text-muted">{{ r.observacion or '' }}</td>
+        </tr>
+      {% else %}<tr><td colspan="7" class="text-center text-muted py-3">Sin registros para el período.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if not current_user.es_empleado %}
+  <form method="post" action="{{ url_for('asistencia.registro_manual') }}" class="row g-2 border-top pt-3 mt-2">
+    <div class="col-12"><small class="text-muted fw-semibold">Registro / ajuste manual</small></div>
+    <div class="col-md-3"><input name="empleado_id" type="number" class="form-control form-control-sm" placeholder="ID empleado" required></div>
+    <div class="col-md-2"><input name="fecha" type="date" class="form-control form-control-sm" required></div>
+    <div class="col-md-2"><input name="hora_entrada" type="time" class="form-control form-control-sm"></div>
+    <div class="col-md-2"><input name="hora_salida" type="time" class="form-control form-control-sm"></div>
+    <div class="col-md-2"><select name="estado" class="form-select form-select-sm">
+      <option value="">Auto</option><option>presente</option><option>tardanza</option><option>ausente</option><option>permiso</option>
+    </select></div>
+    <div class="col-md-1"><button class="btn btn-sm btn-success w-100"><i class="bi bi-plus"></i></button></div>
+  </form>
+  {% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Evaluaciones de desempeño{% endblock %}
+{% block page_title %}Evaluaciones de Desempeño{% endblock %}
+
+{% block content %}
+<div class="card"><div class="card-body">
+  <div class="d-flex justify-content-end mb-3">
+    {% if not current_user.es_empleado %}
+    <a href="{{ url_for('evaluacion.crear') }}" class="btn btn-sm btn-success"><i class="bi bi-plus-lg"></i> Nueva evaluación</a>
+    {% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Empleado</th><th>Período</th><th>Fecha</th><th>Evaluador</th><th>Puntaje</th><th>Calificación</th><th></th></tr></thead>
+      <tbody>
+      {% for ev in evaluaciones %}
+        <tr>
+          <td>{{ ev.empleado.nombre_completo }}</td>
+          <td>{{ ev.periodo }}</td>
+          <td>{{ ev.fecha.strftime('%d/%m/%Y') }}</td>
+          <td>{{ ev.evaluador.nombre_completo if ev.evaluador else 'RRHH' }}</td>
+          <td><span class="badge bg-primary">{{ ev.puntaje_total }} / 5</span></td>
+          <td>{{ ev.calificacion }}</td>
+          <td><a href="{{ url_for('evaluacion.detalle', id=ev.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+        </tr>
+      {% else %}<tr><td colspan="7" class="text-center text-muted py-3">Sin evaluaciones.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endblock %}

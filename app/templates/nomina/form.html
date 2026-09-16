@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Generar nómina individual{% endblock %}
+{% block page_title %}Generar nómina individual{% endblock %}
+
+{% block content %}
+<div class="card"><div class="card-body">
+<form method="post" action="{{ url_for('nomina.generar') }}" class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Empleado *</label>
+    <select name="empleado_id" class="form-select" required>
+      {% for e in empleados %}<option value="{{ e.id }}">{{ e.nombre_completo }} — {{ e.salario_actual | money }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Año *</label>
+    <input type="number" name="anio" value="{{ anio }}" class="form-control" required>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Mes *</label>
+    <select name="mes" class="form-select" required>
+      {% for m in range(1,13) %}<option value="{{ m }}" {{ 'selected' if m == mes }}>{{ m }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Concepto de bono (opcional)</label>
+    <input name="bono_concepto" class="form-control" placeholder="Ej. Bono de productividad">
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Monto del bono</label>
+    <input type="number" step="0.01" name="bono_monto" class="form-control" placeholder="0.00">
+  </div>
+  <div class="col-12">
+    <button class="btn btn-success"><i class="bi bi-calculator"></i> Calcular y generar</button>
+    <a href="{{ url_for('nomina.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+<div class="alert alert-light border mt-3 mb-0 small">
+  El cálculo aplica: sueldo proporcional a días trabajados, bono de antigüedad,
+  bonos manuales y deducción de aporte IESS (9,45 %). Los permisos <em>no remunerados</em>
+  aprobados descuentan días automáticamente.
+</div>
+</div></div>
+{% endblock %}

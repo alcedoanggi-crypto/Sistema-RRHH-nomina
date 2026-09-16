@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Recibo {{ n.periodo }}{% endblock %}
+{% block page_title %}Rol de pagos — {{ n.periodo }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-body">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h5 class="mb-0">{{ n.empleado.nombre_completo }}</h5>
+          <small class="text-muted">{{ n.empleado.cargo.nombre if n.empleado.cargo else '' }} · {{ n.empleado.departamento.nombre if n.empleado.departamento else '' }}</small>
+        </div>
+        <span class="badge bg-{{ 'success' if n.estado == 'pagada' else 'info' }} fs-6">{{ n.estado }}</span>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="text-verde">Ingresos</h6>
+          <table class="table table-sm">
+            {% for d in n.ingresos %}<tr><td>{{ d.concepto }}</td><td class="text-end">{{ d.monto | money }}</td></tr>{% endfor %}
+            <tr class="fw-bold border-top"><td>Total ingresos</td><td class="text-end">{{ n.total_ingresos | money }}</td></tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <h6 class="text-danger">Deducciones</h6>
+          <table class="table table-sm">
+            {% for d in n.deducciones %}<tr><td>{{ d.concepto }}</td><td class="text-end">{{ d.monto | money }}</td></tr>{% endfor %}
+            <tr class="fw-bold border-top"><td>Total deducciones</td><td class="text-end">{{ n.total_deducciones | money }}</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="alert bg-verde text-white d-flex justify-content-between mb-0">
+        <strong>NETO A PAGAR</strong><strong>{{ n.neto_pagar | money }}</strong>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card"><div class="card-body">
+      <p><strong>Período:</strong> {{ n.periodo }}</p>
+      <p><strong>Días trabajados:</strong> {{ n.dias_trabajados }}</p>
+      <p><strong>Salario base:</strong> {{ n.salario_base | money }}</p>
+      <p><strong>Generada:</strong> {{ n.generada_en.strftime('%d/%m/%Y') }}</p>
+      {% if n.pagada_en %}<p><strong>Pagada:</strong> {{ n.pagada_en.strftime('%d/%m/%Y') }}</p>{% endif %}
+      <hr>
+      <a href="{{ url_for('nomina.recibo', id=n.id) }}" target="_blank" class="btn btn-danger w-100 mb-2"><i class="bi bi-file-earmark-pdf"></i> Descargar recibo PDF</a>
+      {% if current_user.es_admin_rrhh and n.estado != 'pagada' %}
+      <form method="post" action="{{ url_for('nomina.marcar_pagada', id=n.id) }}">
+        <button class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Marcar como pagada</button>
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

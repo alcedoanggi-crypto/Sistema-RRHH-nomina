@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Solicitud #{{ p.id }}{% endblock %}
+{% block page_title %}Solicitud #{{ p.id }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card"><div class="card-body">
+      <div class="d-flex justify-content-between">
+        <h5>{{ p.tipo.label }}</h5>
+        <span class="badge bg-{{ p.estado.badge }} badge-estado fs-6">{{ p.estado.label }}</span>
+      </div>
+      <hr>
+      <p><strong>Empleado:</strong> {{ p.empleado.nombre_completo }} ({{ p.empleado.departamento.nombre if p.empleado.departamento else '-' }})</p>
+      <p><strong>Período:</strong> {{ p.fecha_inicio.strftime('%d/%m/%Y') }} → {{ p.fecha_fin.strftime('%d/%m/%Y') }} ({{ p.dias }} día(s))</p>
+      <p><strong>Remunerado:</strong> {{ 'Sí' if p.es_remunerado else 'No' }}</p>
+      <p><strong>Motivo:</strong><br>{{ p.motivo }}</p>
+      {% if p.adjunto %}<p><a href="{{ url_for('static', filename=p.adjunto) }}" target="_blank"><i class="bi bi-paperclip"></i> Ver adjunto</a></p>{% endif %}
+      {% if p.comentario_aprobacion %}
+        <div class="alert alert-light border"><strong>Comentario:</strong> {{ p.comentario_aprobacion }}</div>
+      {% endif %}
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card"><div class="card-body">
+      <h6 class="text-muted">Flujo de aprobación</h6>
+      <ul class="list-unstyled">
+        <li class="mb-2"><i class="bi bi-1-circle-fill text-primary"></i> Solicitado — {{ p.solicitado_en.strftime('%d/%m/%Y %H:%M') }}</li>
+        <li class="mb-2">
+          <i class="bi bi-2-circle{{ '-fill text-success' if p.aprobado_jefe_id else ' text-muted' }}"></i>
+          Jefe de área {{ '· ' ~ p.aprobado_jefe.nombre_completo if p.aprobado_jefe }}
+        </li>
+        <li class="mb-2">
+          <i class="bi bi-3-circle{{ '-fill text-success' if p.estado.value == 'aprobado' else ' text-muted' }}"></i>
+          RRHH (aprobación final)
+        </li>
+      </ul>
+
+      {% set puede_aprobar = current_user.es_admin_rrhh or (current_user.es_jefe and p.estado.value == 'pendiente') %}
+      {% if puede_aprobar and p.estado.value not in ['aprobado','rechazado','cancelado'] %}
+      <hr>
+      <form method="post" action="{{ url_for('permiso.aprobar', id=p.id) }}" class="mb-2">
+        <input name="comentario" class="form-control form-control-sm mb-2" placeholder="Comentario (opcional)">
+        <button class="btn btn-success btn-sm w-100"><i class="bi bi-check-lg"></i> Aprobar</button>
+      </form>
+      <form method="post" action="{{ url_for('permiso.rechazar', id=p.id) }}">
+        <button class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-x-lg"></i> Rechazar</button>
+      </form>
+      {% endif %}
+
+      {% if p.empleado_id == current_user.empleado_id and p.estado.value in ['pendiente','aprobado_jefe'] %}
+      <hr>
+      <form method="post" action="{{ url_for('permiso.cancelar', id=p.id) }}">
+        <button class="btn btn-outline-secondary btn-sm w-100">Cancelar mi solicitud</button>
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

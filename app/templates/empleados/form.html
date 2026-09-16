@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if empleado else 'Nuevo' }} empleado{% endblock %}
+{% block page_title %}{{ 'Editar' if empleado else 'Nuevo' }} empleado{% endblock %}
+
+{% block content %}
+<div class="card"><div class="card-body">
+<form method="post" enctype="multipart/form-data" class="row g-3">
+  <div class="col-md-4">
+    <label class="form-label">Cédula *</label>
+    <input name="cedula" class="form-control" value="{{ empleado.cedula if empleado }}" {{ 'readonly' if empleado }} required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Nombres *</label>
+    <input name="nombres" class="form-control" value="{{ empleado.nombres if empleado }}" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Apellidos *</label>
+    <input name="apellidos" class="form-control" value="{{ empleado.apellidos if empleado }}" required>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Fecha nacimiento</label>
+    <input type="date" name="fecha_nacimiento" class="form-control" value="{{ empleado.fecha_nacimiento if empleado and empleado.fecha_nacimiento }}">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Género</label>
+    <select name="genero" class="form-select">
+      <option value="">--</option>
+      {% for g in ['Masculino','Femenino','Otro'] %}
+      <option {{ 'selected' if empleado and empleado.genero == g }}>{{ g }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Teléfono</label>
+    <input name="telefono" class="form-control" value="{{ empleado.telefono if empleado }}">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Correo</label>
+    <input type="email" name="email" class="form-control" value="{{ empleado.email if empleado }}">
+  </div>
+  <div class="col-12">
+    <label class="form-label">Dirección</label>
+    <input name="direccion" class="form-control" value="{{ empleado.direccion if empleado }}">
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Departamento</label>
+    <select name="departamento_id" class="form-select">
+      <option value="">--</option>
+      {% for d in departamentos %}
+      <option value="{{ d.id }}" {{ 'selected' if empleado and empleado.departamento_id == d.id }}>{{ d.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Cargo</label>
+    <select name="cargo_id" class="form-select">
+      <option value="">--</option>
+      {% for c in cargos %}
+      <option value="{{ c.id }}" {{ 'selected' if empleado and empleado.cargo_id == c.id }}>{{ c.nombre }} — {{ c.departamento.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">{{ 'Fecha ingreso' if not empleado else 'Fecha salida (baja)' }}</label>
+    {% if empleado %}
+      <input type="date" name="fecha_salida" class="form-control" value="{{ empleado.fecha_salida if empleado.fecha_salida }}">
+    {% else %}
+      <input type="date" name="fecha_ingreso" class="form-control" value="{{ ''|string }}" required>
+    {% endif %}
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Foto</label>
+    <input type="file" name="foto" class="form-control" accept="image/*">
+  </div>
+
+  {% if not empleado %}
+  <div class="col-12"><hr><div class="form-check">
+    <input class="form-check-input" type="checkbox" name="crear_usuario" id="cu" onchange="document.getElementById('userBox').classList.toggle('d-none')">
+    <label class="form-check-label" for="cu">Crear usuario de acceso para este empleado</label>
+  </div></div>
+  <div id="userBox" class="row g-3 d-none">
+    <div class="col-md-4"><label class="form-label">Usuario</label><input name="username" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Contraseña</label><input name="password" class="form-control" placeholder="Por defecto: la cédula"></div>
+    <div class="col-md-4"><label class="form-label">Rol</label>
+      <select name="rol" class="form-select">
+        {% for r in roles %}<option value="{{ r.value }}">{{ r.label }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12">
+    <button class="btn btn-success"><i class="bi bi-check-lg"></i> Guardar</button>
+    <a href="{{ url_for('empleado.listar') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+</div></div>
+{% endblock %}

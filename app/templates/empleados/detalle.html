@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ empleado.nombre_completo }}{% endblock %}
+{% block page_title %}Perfil del empleado{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body text-center">
+        {% set e = empleado %}
+        {% with cls='avatar-lg' %}{% include "empleados/_avatar.html" %}{% endwith %}
+        <h5 class="mt-3 mb-0">{{ empleado.nombre_completo }}</h5>
+        <p class="text-muted mb-2">{{ empleado.cargo.nombre if empleado.cargo else 'Sin cargo' }}</p>
+        {% if empleado.activo %}<span class="badge bg-success">Activo</span>
+        {% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+
+        <ul class="list-group list-group-flush text-start mt-3">
+          <li class="list-group-item"><i class="bi bi-card-text"></i> Cédula: {{ empleado.cedula }}</li>
+          <li class="list-group-item"><i class="bi bi-building"></i> {{ empleado.departamento.nombre if empleado.departamento else '-' }}</li>
+          <li class="list-group-item"><i class="bi bi-envelope"></i> {{ empleado.email or '-' }}</li>
+          <li class="list-group-item"><i class="bi bi-telephone"></i> {{ empleado.telefono or '-' }}</li>
+          <li class="list-group-item"><i class="bi bi-geo-alt"></i> {{ empleado.direccion or '-' }}</li>
+          <li class="list-group-item"><i class="bi bi-calendar-event"></i> Ingreso: {{ empleado.fecha_ingreso.strftime('%d/%m/%Y') }} ({{ empleado.antiguedad_anios }} años)</li>
+          <li class="list-group-item"><i class="bi bi-cash"></i> Salario actual: {{ empleado.salario_actual | money }}</li>
+        </ul>
+        {% if current_user.es_admin_rrhh %}
+        <a href="{{ url_for('empleado.editar', id=empleado.id) }}" class="btn btn-outline-primary btn-sm mt-3 w-100"><i class="bi bi-pencil"></i> Editar</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-contratos">Contratos</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-docs">Documentos</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nomina">Nómina</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-eval">Evaluaciones</button></li>
+    </ul>
+    <div class="tab-content border border-top-0 rounded-bottom bg-white p-3">
+      <div class="tab-pane fade show active" id="tab-contratos">
+        <table class="table table-sm">
+          <thead><tr><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Salario</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+          {% for c in empleado.contratos %}
+            <tr>
+              <td>{{ c.tipo.label }}</td><td>{{ c.fecha_inicio.strftime('%d/%m/%Y') }}</td>
+              <td>{{ c.fecha_fin.strftime('%d/%m/%Y') if c.fecha_fin else 'Indefinido' }}</td>
+              <td>{{ c.salario | money }}</td>
+              <td>{% if c.esta_vigente %}<span class="badge bg-success">Vigente</span>{% else %}<span class="badge bg-secondary">{{ c.estado.value }}</span>{% endif %}</td>
+              <td>{% if c.archivo %}<a href="{{ url_for('static', filename=c.archivo) }}" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>{% endif %}</td>
+            </tr>
+          {% else %}<tr><td colspan="6" class="text-muted">Sin contratos.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+        {% if current_user.es_admin_rrhh %}
+        <form method="post" action="{{ url_for('empleado.agregar_contrato', id=empleado.id) }}" enctype="multipart/form-data" class="row g-2 mt-2 border-top pt-3">
+          <div class="col-md-3"><select name="tipo" class="form-select form-select-sm">
+            {% for t in ['indefinido','plazo_fijo','eventual','pasantia','servicios_profesionales'] %}<option value="{{ t }}">{{ t.replace('_',' ').title() }}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-2"><input type="date" name="fecha_inicio" class="form-control form-control-sm" required></div>
+          <div class="col-md-2"><input type="date" name="fecha_fin" class="form-control form-control-sm" placeholder="Fin"></div>
+          <div class="col-md-2"><input type="number" step="0.01" name="salario" class="form-control form-control-sm" placeholder="Salario" required></div>
+          <div class="col-md-2"><input type="file" name="archivo" class="form-control form-control-sm"></div>
+          <div class="col-md-1"><button class="btn btn-sm btn-success w-100"><i class="bi bi-plus"></i></button></div>
+        </form>
+        {% endif %}
+      </div>
+
+      <div class="tab-pane fade" id="tab-docs">
+        <div class="list-group mb-3">
+        {% for d in empleado.documentos %}
+          <a href="{{ url_for('static', filename=d.archivo) }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between">
+            <span><i class="bi bi-file-earmark-text text-verde"></i> {{ d.nombre }} <small class="text-muted">({{ d.tipo }})</small></span>
+            <small class="text-muted">{{ d.subido_en.strftime('%d/%m/%Y') }}</small>
+          </a>
+        {% else %}<p class="text-muted">Sin documentos digitales.</p>{% endfor %}
+        </div>
+        {% if current_user.es_admin_rrhh %}
+        <form method="post" action="{{ url_for('empleado.agregar_documento', id=empleado.id) }}" enctype="multipart/form-data" class="row g-2 border-top pt-3">
+          <div class="col-md-4"><input name="nombre" class="form-control form-control-sm" placeholder="Nombre del documento"></div>
+          <div class="col-md-3"><select name="tipo" class="form-select form-select-sm">
+            <option value="contrato">Contrato</option><option value="certificado">Certificado</option>
+            <option value="cedula">Cédula</option><option value="titulo">Título</option><option value="otro">Otro</option>
+          </select></div>
+          <div class="col-md-3"><input type="file" name="archivo" class="form-control form-control-sm" required></div>
+          <div class="col-md-2"><button class="btn btn-sm btn-success w-100"><i class="bi bi-upload"></i> Subir</button></div>
+        </form>
+        {% endif %}
+      </div>
+
+      <div class="tab-pane fade" id="tab-nomina">
+        <table class="table table-sm">
+          <thead><tr><th>Período</th><th>Ingresos</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+          {% for n in empleado.nominas | sort(attribute='anio', reverse=true) %}
+            <tr>
+              <td>{{ n.periodo }}</td><td>{{ n.total_ingresos | money }}</td>
+              <td>{{ n.total_deducciones | money }}</td><td class="fw-semibold">{{ n.neto_pagar | money }}</td>
+              <td><span class="badge bg-{{ 'success' if n.estado == 'pagada' else 'info' }}">{{ n.estado }}</span></td>
+              <td><a href="{{ url_for('nomina.recibo', id=n.id) }}" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a></td>
+            </tr>
+          {% else %}<tr><td colspan="6" class="text-muted">Sin nóminas.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tab-pane fade" id="tab-eval">
+        {% for ev in empleado.evaluaciones %}
+        <div class="border rounded p-2 mb-2">
+          <div class="d-flex justify-content-between">
+            <strong>{{ ev.periodo }}</strong>
+            <span class="badge bg-primary">{{ ev.puntaje_total }} / 5 · {{ ev.calificacion }}</span>
+          </div>
+          <small class="text-muted">Evaluador: {{ ev.evaluador.nombre_completo if ev.evaluador else 'RRHH' }} · {{ ev.fecha.strftime('%d/%m/%Y') }}</small>
+          <div><a href="{{ url_for('evaluacion.detalle', id=ev.id) }}" class="small">Ver detalle</a></div>
+        </div>
+        {% else %}<p class="text-muted">Sin evaluaciones.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

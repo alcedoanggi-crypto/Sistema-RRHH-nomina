@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Evaluación {{ ev.periodo }}{% endblock %}
+{% block page_title %}Evaluación de desempeño — {{ ev.periodo }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card"><div class="card-body">
+      <div class="d-flex justify-content-between">
+        <h5>{{ ev.empleado.nombre_completo }}</h5>
+        <span class="badge bg-primary fs-6">{{ ev.puntaje_total }} / 5 · {{ ev.calificacion }}</span>
+      </div>
+      <small class="text-muted">Evaluador: {{ ev.evaluador.nombre_completo if ev.evaluador else 'RRHH' }} · {{ ev.fecha.strftime('%d/%m/%Y') }}</small>
+      <hr>
+      {% set etiquetas = {'productividad':'Productividad','calidad_trabajo':'Calidad del trabajo','trabajo_equipo':'Trabajo en equipo','puntualidad':'Puntualidad','iniciativa':'Iniciativa'} %}
+      {% for c in ev.CRITERIOS %}
+      {% set val = ev|attr(c) %}
+      <div class="mb-2">
+        <div class="d-flex justify-content-between"><span>{{ etiquetas[c] }}</span><span class="rating-stars">{{ '★' * val }}{{ '☆' * (5 - val) }}</span></div>
+        <div class="progress" style="height:8px"><div class="progress-bar bg-success" style="width: {{ val * 20 }}%"></div></div>
+      </div>
+      {% endfor %}
+      <hr>
+      <p><strong>Fortalezas:</strong><br>{{ ev.fortalezas or '—' }}</p>
+      <p><strong>Áreas de mejora:</strong><br>{{ ev.areas_mejora or '—' }}</p>
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card"><div class="card-body">
+      <h6 class="text-muted">Comentario del empleado</h6>
+      {% if ev.comentario_empleado %}
+        <p>{{ ev.comentario_empleado }}</p>
+      {% elif ev.empleado_id == current_user.empleado_id %}
+        <form method="post" action="{{ url_for('evaluacion.comentar', id=ev.id) }}">
+          <textarea name="comentario_empleado" class="form-control mb-2" rows="4" placeholder="Escribe tu retroalimentación..."></textarea>
+          <button class="btn btn-sm btn-success">Guardar comentario</button>
+        </form>
+      {% else %}
+        <p class="text-muted">El empleado aún no ha comentado.</p>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Iniciar sesión · RRHH y Nómina{% endblock %}
+
+{% block fullpage %}
+<div class="login-wrapper">
+  <span class="bg-blob b1"></span>
+  <span class="bg-blob b2"></span>
+
+  <div class="login-panel">
+    <!-- Lado ilustrativo -->
+    <div class="login-art">
+      <span class="blob blob-3"></span>
+      <div class="art-inner">
+        <div class="login-brand">
+          <span class="brand-mark"><i class="bi bi-diagram-3-fill"></i></span>
+          Sistema Corporativo
+        </div>
+        <h1>Gestión de <span class="accent">Recursos&nbsp;Humanos</span> y Nómina</h1>
+        <p class="lead-text">
+          Una plataforma para administrar tu organización de principio a fin:
+          talento, asistencia, permisos y pagos.
+        </p>
+
+        <ul class="login-features">
+          <li><span class="feat-ico"><i class="bi bi-clock-history"></i></span> Control de asistencia en tiempo real</li>
+          <li><span class="feat-ico"><i class="bi bi-calendar-check"></i></span> Flujo de aprobación de permisos y vacaciones</li>
+          <li><span class="feat-ico"><i class="bi bi-cash-stack"></i></span> Nómina automática con recibos en PDF</li>
+          <li><span class="feat-ico"><i class="bi bi-graph-up-arrow"></i></span> Tablero ejecutivo con indicadores clave</li>
+        </ul>
+      </div>
+      <div class="login-foot">&copy; {{ 2026 }} Sistema RRHH y Nómina · Flask + PostgreSQL</div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="login-form-side">
+      <div class="login-card">
+        <h3 class="mb-1">Bienvenido</h3>
+        <p class="sub">Ingresa tus credenciales para continuar</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2 small">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        <form method="post" novalidate>
+          <div class="field">
+            <i class="bi bi-person field-ico"></i>
+            <input type="text" name="username" id="username" class="form-control"
+                   placeholder=" " required autofocus>
+            <label class="floating" for="username">Usuario o correo</label>
+          </div>
+
+          <div class="field">
+            <i class="bi bi-lock field-ico"></i>
+            <input type="password" name="password" id="password" class="form-control"
+                   placeholder=" " required>
+            <label class="floating" for="password">Contraseña</label>
+            <button type="button" class="toggle-pass" aria-label="Mostrar contraseña"
+                    onclick="const p=document.getElementById('password');
+                             const s=p.type==='password';p.type=s?'text':'password';
+                             this.firstElementChild.className=s?'bi bi-eye-slash':'bi bi-eye';">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+            <label class="form-check-label small" for="remember">Mantener sesión iniciada</label>
+          </div>
+
+          <button class="btn-login" type="submit">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

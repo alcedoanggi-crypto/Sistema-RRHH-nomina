@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Nueva solicitud{% endblock %}
+{% block page_title %}Nueva solicitud de permiso / vacaciones{% endblock %}
+
+{% block content %}
+<div class="card"><div class="card-body">
+<form method="post" enctype="multipart/form-data" class="row g-3">
+  <div class="col-md-4">
+    <label class="form-label">Tipo *</label>
+    <select name="tipo" class="form-select" required>
+      {% for t in tipos %}<option value="{{ t.value }}">{{ t.label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Fecha inicio *</label>
+    <input type="date" name="fecha_inicio" class="form-control" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Fecha fin *</label>
+    <input type="date" name="fecha_fin" class="form-control" required>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Motivo *</label>
+    <textarea name="motivo" class="form-control" rows="3" required></textarea>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Adjunto (opcional)</label>
+    <input type="file" name="adjunto" class="form-control">
+    <small class="text-muted">Ej. certificado médico para permisos por salud.</small>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-success"><i class="bi bi-send"></i> Enviar solicitud</button>
+    <a href="{{ url_for('permiso.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+<div class="alert alert-info mt-3 mb-0 small">
+  <i class="bi bi-info-circle"></i> Flujo de aprobación: <strong>Pendiente</strong> →
+  aprobación de <strong>jefe de área</strong> → aprobación final de <strong>RRHH</strong>.
+</div>
+</div></div>
+{% endblock %}

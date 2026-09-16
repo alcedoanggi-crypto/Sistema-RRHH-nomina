@@ -1,0 +1,6 @@
+{# Requiere variable `e` (Empleado). Parámetro opcional `cls`. #}
+{% if e.foto %}
+  <img src="{{ url_for('static', filename=e.foto) }}" class="avatar {{ cls or '' }}" alt="{{ e.nombre_completo }}">
+{% else %}
+  <span class="avatar avatar-placeholder {{ cls or '' }}">{{ e.nombres[0] }}{{ e.apellidos[0] }}</span>
+{% endif %}

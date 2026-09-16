@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Nómina{% endblock %}
+{% block page_title %}Nómina — {{ mes }}/{{ anio }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="kpi-card kpi-azul"><div class="kpi-label">Total ingresos</div><div class="kpi-value">{{ totales.ingresos | money }}</div></div></div>
+  <div class="col-md-4"><div class="kpi-card kpi-gris"><div class="kpi-label">Total deducciones</div><div class="kpi-value">{{ totales.deducciones | money }}</div></div></div>
+  <div class="col-md-4"><div class="kpi-card kpi-verde"><div class="kpi-label">Neto a pagar</div><div class="kpi-value">{{ totales.neto | money }}</div></div></div>
+</div>
+
+<div class="card"><div class="card-body">
+  <div class="d-flex justify-content-between mb-3">
+    <form method="get" class="d-flex gap-2">
+      <input type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm" style="width:100px">
+      <select name="mes" class="form-select form-select-sm" style="width:100px">
+        {% for m in range(1,13) %}<option value="{{ m }}" {{ 'selected' if m == mes }}>{{ m }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-sm btn-primary">Ver</button>
+    </form>
+    {% if current_user.es_admin_rrhh %}
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('nomina.form') }}" class="btn btn-sm btn-outline-primary">Generar individual</a>
+      <form method="post" action="{{ url_for('nomina.generar') }}">
+        <input type="hidden" name="anio" value="{{ anio }}"><input type="hidden" name="mes" value="{{ mes }}">
+        <button class="btn btn-sm btn-success" onclick="return confirm('¿Generar la nómina de TODOS los empleados activos para {{ mes }}/{{ anio }}?')">
+          <i class="bi bi-lightning-charge"></i> Generar nómina masiva
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Empleado</th><th>Días</th><th>Ingresos</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for n in nominas %}
+        <tr>
+          <td>{{ n.empleado.nombre_completo }}</td>
+          <td>{{ n.dias_trabajados }}</td>
+          <td>{{ n.total_ingresos | money }}</td>
+          <td>{{ n.total_deducciones | money }}</td>
+          <td class="fw-semibold">{{ n.neto_pagar | money }}</td>
+          <td><span class="badge bg-{{ 'success' if n.estado == 'pagada' else 'info' }}">{{ n.estado }}</span></td>
+          <td>
+            <a href="{{ url_for('nomina.detalle', id=n.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+            <a href="{{ url_for('nomina.recibo', id=n.id) }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-pdf"></i></a>
+          </td>
+        </tr>
+      {% else %}<tr><td colspan="7" class="text-center text-muted py-3">No hay nómina generada para este período.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endblock %}
