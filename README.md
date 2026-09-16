@@ -123,7 +123,7 @@ flask db upgrade
 ```powershell
 python run.py
 ```
-Abre http://localhost:5000
+Abre http://localhost:5002
 
 ## Usuarios de demostración (tras `python seed.py`)
 
